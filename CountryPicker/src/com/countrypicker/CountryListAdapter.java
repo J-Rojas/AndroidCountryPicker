@@ -18,8 +18,9 @@ import com.countrypicker.R.drawable;
 public class CountryListAdapter extends BaseAdapter {
 
 	private Context context;
-	List<Country> countries;
+	protected List<Country> countries;
 	LayoutInflater inflater;
+	int rowResId = R.layout.row;
 
 	/**
 	 * The drawable image name has the format "flag_$countryCode". We need to
@@ -76,6 +77,10 @@ public class CountryListAdapter extends BaseAdapter {
 		return 0;
 	}
 
+	public void setRowLayout(int resId) {
+		rowResId = resId;
+	}
+
 	/**
 	 * Return row for each country
 	 */
@@ -87,7 +92,7 @@ public class CountryListAdapter extends BaseAdapter {
 
 		if (convertView == null) {
 			cell = new Cell();
-			cellView = inflater.inflate(R.layout.row, null);
+			cellView = inflater.inflate(rowResId, null);
 			cell.textView = (TextView) cellView.findViewById(R.id.row_title);
 			cell.imageView = (ImageView) cellView.findViewById(R.id.row_icon);
 			cellView.setTag(cell);
@@ -97,10 +102,13 @@ public class CountryListAdapter extends BaseAdapter {
 
 		cell.textView.setText(country.getName());
 
-		// Load drawable dynamically from country code
-		String drawableName = "flag_"
-				+ country.getCode().toLowerCase(Locale.ENGLISH);
-		cell.imageView.setImageResource(getResId(drawableName));
+		if (cell.imageView != null) {
+			// Load drawable dynamically from country code
+			String drawableName = "flag_"
+					+ country.getCode().toLowerCase(Locale.ENGLISH);
+			cell.imageView.setImageResource(getResId(drawableName));
+		}
+
 		return cellView;
 	}
 

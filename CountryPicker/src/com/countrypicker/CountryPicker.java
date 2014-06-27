@@ -13,7 +13,7 @@ import org.json.JSONObject;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Bundle;
-import android.support.v4.app.DialogFragment;
+import android.app.DialogFragment;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Base64;
@@ -25,6 +25,8 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.EditText;
 import android.widget.ListView;
+
+import com.countrypicker.R;
 
 public class CountryPicker extends DialogFragment implements
 		Comparator<Country> {
@@ -38,6 +40,8 @@ public class CountryPicker extends DialogFragment implements
 	 * Adapter for the listview
 	 */
 	private CountryListAdapter adapter;
+
+	private CountrySearchListener searchListener = new MySearch();
 
 	/**
 	 * Hold all countries, sorted by country name
@@ -53,6 +57,10 @@ public class CountryPicker extends DialogFragment implements
 	 * Listener to which country user selected
 	 */
 	private CountryPickerListener listener;
+
+	int resRowLayout = R.layout.row;
+
+
 
 	/**
 	 * Set listener
@@ -169,7 +177,7 @@ public class CountryPicker extends DialogFragment implements
 
 		// Get countries from the json
 		getAllCountries();
-
+		
 		// Set dialog title if show as dialog
 		Bundle args = getArguments();
 		if (args != null) {
@@ -190,7 +198,11 @@ public class CountryPicker extends DialogFragment implements
 				.findViewById(R.id.country_picker_listview);
 
 		// Set adapter
-		adapter = new CountryListAdapter(getActivity(), selectedCountriesList);
+		if (adapter == null) {
+			adapter = new CountryListAdapter(getActivity(), selectedCountriesList);
+		}
+		
+		adapter.setRowLayout(resRowLayout);
 		countryListView.setAdapter(adapter);
 
 		// Inform listener
@@ -200,7 +212,7 @@ public class CountryPicker extends DialogFragment implements
 			public void onItemClick(AdapterView<?> parent, View view,
 					int position, long id) {
 				if (listener != null) {
-					Country country = selectedCountriesList.get(position);
+					Country country = (Country) adapter.getItem(position);
 					listener.onSelectCountry(country.getName(),
 							country.getCode());
 				}
@@ -222,7 +234,7 @@ public class CountryPicker extends DialogFragment implements
 
 			@Override
 			public void afterTextChanged(Editable s) {
-				search(s.toString());
+				searchListener.search(adapter, s.toString());
 			}
 		});
 
@@ -236,17 +248,19 @@ public class CountryPicker extends DialogFragment implements
 	 * @param text
 	 */
 	@SuppressLint("DefaultLocale")
-	private void search(String text) {
-		selectedCountriesList.clear();
+	class MySearch implements CountrySearchListener {
+		public void search(CountryListAdapter adapter, String text) {
+			selectedCountriesList.clear();
 
-		for (Country country : allCountriesList) {
-			if (country.getName().toLowerCase(Locale.ENGLISH)
-					.contains(text.toLowerCase())) {
-				selectedCountriesList.add(country);
+			for (Country country : allCountriesList) {
+				if (country.getName().toLowerCase(Locale.ENGLISH)
+						.contains(text.toLowerCase())) {
+					selectedCountriesList.add(country);
+				}
 			}
-		}
 
-		adapter.notifyDataSetChanged();
+			adapter.notifyDataSetChanged();
+		}
 	}
 
 	/**
@@ -257,4 +271,15 @@ public class CountryPicker extends DialogFragment implements
 		return lhs.getName().compareTo(rhs.getName());
 	}
 
+	public void setRowLayout(int resId) {
+		resRowLayout = resId;
+	}
+
+	public void setCountryListAdapter(CountryListAdapter adapter_) {
+		adapter = adapter_;
+	}
+
+	public void setCountrySearchListener(CountrySearchListener searchListener_) {
+		searchListener = searchListener_;
+	}
 }
